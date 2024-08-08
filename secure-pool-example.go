@@ -55,7 +55,6 @@ func getInstance(projectID string, location string, instanceID string) (*redispb
 func redisConfig(instance *redispb.Instance, password string) *redis.Options {
 	caCertPool := x509.NewCertPool()
 	caCertPool.AppendCertsFromPEM([]byte(instance.ServerCaCerts[0].Cert))
-	//fmt.Printf("%+v\n", string(instance.ServerCaCerts[0].Cert))
 	return &redis.Options{
 		Addr:     fmt.Sprintf("%s:%d", instance.Host, instance.Port),
 		Password: password,
