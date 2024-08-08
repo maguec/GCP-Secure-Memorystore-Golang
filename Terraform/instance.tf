@@ -11,6 +11,9 @@ resource "google_compute_instance" "vm" {
       projectid : var.gcp_project_id,
       region : var.gcp_region
       memorystore : google_redis_instance.cache.name
+      memorystore_ip : google_redis_instance.cache.host
+      memorystore_port : google_redis_instance.cache.port
+      memorystore_cert : google_redis_instance.cache.server_ca_certs[0].cert
     },
   )
 
@@ -32,6 +35,10 @@ resource "google_compute_instance" "vm" {
     enable_secure_boot = true
   }
 
+  service_account {
+    email = google_service_account.service_account.email
+    scopes = ["cloud-platform"]
+  }
 
   # Stop updating if the boot disk changes
   lifecycle {

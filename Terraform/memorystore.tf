@@ -5,4 +5,5 @@ resource "google_redis_instance" "cache" {
   memory_size_gb          = 1
   auth_enabled            = true
   transit_encryption_mode = "SERVER_AUTHENTICATION"
+  authorized_network      = google_compute_network.vpc.name
 }

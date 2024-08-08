@@ -78,5 +78,18 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to get instance: %v", err)
 	}
-	fmt.Println(redisConfig(instance, password))
+  conf := redisConfig(instance, password)
+
+  ctx := context.Background()
+  rdb := redis.NewClient(conf)
+  defer rdb.Close()
+  err = rdb.Set(ctx, "key", "value", 0).Err()
+  if err != nil {
+    log.Fatalf("Failed to set key: %v", err)
+  }
+  val, err := rdb.Get(ctx, "key").Result()
+  if err != nil {
+    log.Fatalf("Failed to get key: %v", err)
+  }
+  fmt.Printf("Got value: %s\n", val)
 }
