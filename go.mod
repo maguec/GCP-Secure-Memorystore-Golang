@@ -3,16 +3,22 @@ module github.com/maguec/GCP-Secure-Memorystore-Golang
 go 1.22.2
 
 require (
+	cloud.google.com/go/redis v1.16.2
 	cloud.google.com/go/secretmanager v1.13.5
 	github.com/alexflint/go-arg v1.5.1
+	github.com/go-redis/redis/v9 v9.0.0-rc.2
 )
 
 require (
+	cloud.google.com/go v0.115.0 // indirect
 	cloud.google.com/go/auth v0.7.2 // indirect
 	cloud.google.com/go/auth/oauth2adapt v0.2.3 // indirect
 	cloud.google.com/go/compute/metadata v0.5.0 // indirect
 	cloud.google.com/go/iam v1.1.10 // indirect
+	cloud.google.com/go/longrunning v0.5.9 // indirect
 	github.com/alexflint/go-scalar v1.2.0 // indirect
+	github.com/cespare/xxhash/v2 v2.2.0 // indirect
+	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/go-logr/logr v1.4.2 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
