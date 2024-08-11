@@ -1,0 +1,69 @@
+digraph root {
+    label = "GCP Secure Memorystore for Golang";
+    labelloc = "tm";
+    fontsize = 14;
+    rankdir = LR;
+  subgraph cluster_0 {
+    shape = box;
+    style = rounded;
+    label = "Google Cloud";
+    labelloc = "tl";
+    color = "#2D3436";
+    bgcolor="#E5F5FD";
+		fontcolor="#2D3436";
+		fontname="Sans-Serif";
+		fontsize=12;
+		labeljust=l;
+    memorystore [
+      label="Memorystore",
+      shape="box",
+      style="rounded",
+      image="./Memorystore.png",
+      labelloc="b",
+      fontsize=9,
+      imagepos="tm",
+    ];
+    vm [
+      label="Compute",
+      shape="box",
+      style="rounded",
+      image="./Compute-Engine.png",
+      labelloc="b",
+      fontsize=9,
+      imagepos="tm",
+    ];
+    secret [
+      label="Secret Manager",
+      shape="box",
+      style="rounded",
+      image="./Secret-Manager.png",
+      labelloc="b",
+      fontsize=9,
+      imagepos="tm",
+    ];
+    api [
+      label="API",
+      shape="box",
+      style="rounded",
+      image="./API.png",
+      labelloc="b",
+      fontsize=9,
+      imagepos="tm",
+    ];
+    iam [
+      label="IAM",
+      shape="box",
+      style="rounded",
+      image="./Identity-And-Access-Management.png",
+      labelloc="b",
+      fontsize=9,
+      imagepos="tm",
+    ];
+  };
+  vm -> secret [ label = "Fetch\nPassword", fontsize=8, fontcolor="blue"];
+  vm -> api [ label = "Memorystore\nInfo", fontsize=8, fontcolor="blue"];
+  memorystore -> secret [ label = "Store\nPassword", fontsize=8, fontcolor="blue"];
+  vm -> iam [ label = "Bind\nService\nAccount", fontsize=8, fontcolor="blue"];
+  api -> memorystore [ label = "Get\nConfig", fontsize=8, fontcolor="blue"];
+  vm -> memorystore [ label = "Secure\nConnection", fontsize=12, fontcolor="darkgreen", weight=10, color="darkgreen"];
+}

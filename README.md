@@ -2,6 +2,8 @@
 
 Example for connecting to GCP Memorystore using Golang.
 
+![diagram](./docs/diagram.png)
+
 ## Terraform
 
 ```
