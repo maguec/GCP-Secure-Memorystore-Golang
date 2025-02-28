@@ -2,6 +2,23 @@
 
 Example for connecting to GCP Memorystore using Golang.
 
+The terraform stores the following settings in [Secret Manager](https://cloud.google.com/secret-manager/docs)
+
+| Setting |
+| --- |
+| IP Address |
+| Port |
+| TLS Certificate |
+| Auth String |
+
+The previous version of this called the backend API to obtain the server information.
+
+This has been changed for the following reasons
+
+- Access to the backed API should be restricted more tightly
+- Calls to the backend API are rate limited with a hard limit so larger deployments may hit this issue
+
+
 ![diagram](./docs/diagram.png)
 
 ## Terraform

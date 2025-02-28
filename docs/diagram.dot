@@ -41,15 +41,6 @@ digraph root {
       fontsize=9,
       imagepos="tm",
     ];
-    api [
-      label="API",
-      shape="box",
-      style="rounded",
-      image="./API.png",
-      labelloc="b",
-      fontsize=9,
-      imagepos="tm",
-    ];
     iam [
       label="IAM",
       shape="box",
@@ -60,10 +51,8 @@ digraph root {
       imagepos="tm",
     ];
   };
-  vm -> secret [ label = "Fetch\nPassword", fontsize=8, fontcolor="blue"];
-  vm -> api [ label = "Memorystore\nInfo", fontsize=8, fontcolor="blue"];
-  memorystore -> secret [ label = "Store\nPassword", fontsize=8, fontcolor="blue"];
+  vm -> secret [ label = "Fetch\nPassword\nIP\nPort\Cert", fontsize=8, fontcolor="blue"];
+  memorystore -> secret [ label = "Store\nPassword\nIP\nPort\Cert", fontsize=8, fontcolor="blue"];
   vm -> iam [ label = "Bind\nService\nAccount", fontsize=8, fontcolor="blue"];
-  api -> memorystore [ label = "Get\nConfig", fontsize=8, fontcolor="blue"];
   vm -> memorystore [ label = "Secure\nConnection", fontsize=12, fontcolor="darkgreen", weight=10, color="darkgreen"];
 }
