@@ -27,7 +27,7 @@ gcloud compute ssh --zone <ZONE> vm-<STRING> --project <PROJECT_ID>
 ```
 
 ```bash
-https://github.com/maguec/GCP-Secure-Memorystore-Golang
+git clone https://github.com/maguec/GCP-Secure-Memorystore-Golang
 cd GCP-Secure-Memorystore-Golang/
 go run secure-pool-example.go
 ```
