@@ -14,6 +14,10 @@ output "vm_ssh_command" {
   value = "gcloud compute ssh --zone ${var.gcp_region}-a vm-${random_id.suffix.hex} --project ${var.gcp_project_id}"
 }
 
+output "run_test_command" {
+  value =  "/usr/lib/go-1.22/bin/go run secure-pool-example.go --project ${var.gcp_project_id} --instance memorystore-${random_id.suffix.hex}"
+}
+
 output "vm_secret_auth" {
   value = "gcloud secrets versions access latest --secret=memorystore-${random_id.suffix.hex}-auth"
 }
