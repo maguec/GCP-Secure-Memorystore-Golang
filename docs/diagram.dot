@@ -51,8 +51,8 @@ digraph root {
       imagepos="tm",
     ];
   };
-  vm -> secret [ label = "Fetch\nPassword\nIP\nPort\Cert", fontsize=8, fontcolor="blue"];
-  memorystore -> secret [ label = "Store\nPassword\nIP\nPort\Cert", fontsize=8, fontcolor="blue"];
+  vm -> secret [ label = "Fetch\nPassword\nIP\nPort\nCert", fontsize=8, fontcolor="blue"];
+  memorystore -> secret [ label = "Store\nPassword\nIP\nPort\nCert", fontsize=8, fontcolor="blue"];
   vm -> iam [ label = "Bind\nService\nAccount", fontsize=8, fontcolor="blue"];
   vm -> memorystore [ label = "Secure\nConnection", fontsize=12, fontcolor="darkgreen", weight=10, color="darkgreen"];
 }
