@@ -82,6 +82,12 @@ func redisConfig(cfg Rconf) *redis.Options {
 		TLSConfig: &tls.Config{
 			RootCAs: caCertPool,
 		},
+    // Connection Pooling Options
+    // ALWAYS use connection pooling
+    MinIdleConns: 1,      // Ensure that there is always at least 1 conn = set to number of workers in prod
+    MaxIdleConns: 1,      // Don't have too many connections open set o to number of workers in prod + alph
+    ConnMaxLifetime: 0,   // Stay open
+    ConnMaxIdleTime: time.Minute, // Close connections after 1 minute of inactivity - change in prod
 	}
 }
 
