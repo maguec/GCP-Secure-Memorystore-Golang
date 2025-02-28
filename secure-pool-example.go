@@ -8,56 +8,77 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 
-	memorystore "cloud.google.com/go/redis/apiv1"
-	redispb "cloud.google.com/go/redis/apiv1/redispb"
 	secretmanager "cloud.google.com/go/secretmanager/apiv1"
 	"cloud.google.com/go/secretmanager/apiv1/secretmanagerpb"
 	"github.com/alexflint/go-arg"
 	"github.com/go-redis/redis/v9"
 )
 
+type Rconf struct {
+	Host string
+	Port string
+	Cert string
+	Auth string
+}
+
 var args struct {
 	Project   string `help:"GCP ProjectID" default:"" arg:"--project, -p, env:GCP_PROJECT"`
 	Instance  string `help:"Memorystore Instance name" default:"" arg:"--instance, -i, env:MEMORYSTORE_INSTANCE"`
-	Loacation string `help:"Memorystore Instance location" default:"" arg:"--location, -l, env:MEMORYSTORE_LOCATION"`
 }
 
-func getSecret(projectID string, secretID string) (string, error) {
+func getSecret(projectID string, secretID string) (Rconf, error) {
 	ctx := context.Background()
 	client, err := secretmanager.NewClient(ctx)
+  cfg := Rconf{}
 	if err != nil {
-		return "", err
+		return cfg, err
 	}
+
+  // Fetch AUTH
 	secret, err := client.AccessSecretVersion(ctx, &secretmanagerpb.AccessSecretVersionRequest{
-		Name: fmt.Sprintf("projects/%s/secrets/%s/versions/latest", projectID, secretID),
+		Name: fmt.Sprintf("projects/%s/secrets/%s-auth/versions/latest", projectID, secretID),
 	})
 	if err != nil {
-		return "", err
+		return cfg, err
 	}
-	return string(secret.Payload.Data), nil
+  cfg.Auth = string(secret.Payload.Data)
+
+  // Fetch CERT
+  secret, err = client.AccessSecretVersion(ctx, &secretmanagerpb.AccessSecretVersionRequest{
+    Name: fmt.Sprintf("projects/%s/secrets/%s-cert/versions/latest", projectID, secretID),
+  })
+  if err != nil {
+    return cfg, err
+  }
+  cfg.Cert = string(secret.Payload.Data)
+
+  // Fetch HOST
+  secret, err = client.AccessSecretVersion(ctx, &secretmanagerpb.AccessSecretVersionRequest{
+    Name: fmt.Sprintf("projects/%s/secrets/%s-ip/versions/latest", projectID, secretID),
+  })
+  if err != nil {
+    return cfg, err
+  }
+  cfg.Host = string(secret.Payload.Data)
+
+  // Fetch PORT
+  secret, err = client.AccessSecretVersion(ctx, &secretmanagerpb.AccessSecretVersionRequest{
+    Name: fmt.Sprintf("projects/%s/secrets/%s-port/versions/latest", projectID, secretID),
+  })
+  if err != nil {
+    return cfg, err
+  }
+  cfg.Port = string(secret.Payload.Data)
+
+	return cfg, nil
 }
 
-func getInstance(projectID string, location string, instanceID string) (*redispb.Instance, error) {
-	ctx := context.Background()
-	client, err := memorystore.NewCloudRedisClient(ctx)
-	if err != nil {
-		return nil, err
-	}
-	instance, err := client.GetInstance(ctx, &redispb.GetInstanceRequest{
-		Name: fmt.Sprintf("projects/%s/locations/%s/instances/%s", projectID, location, instanceID),
-	})
-	if err != nil {
-		return nil, err
-	}
-	return instance, nil
-}
-
-func redisConfig(instance *redispb.Instance, password string) *redis.Options {
+func redisConfig(cfg Rconf) *redis.Options {
 	caCertPool := x509.NewCertPool()
-	caCertPool.AppendCertsFromPEM([]byte(instance.ServerCaCerts[0].Cert))
+	caCertPool.AppendCertsFromPEM([]byte(cfg.Cert))
 	return &redis.Options{
-		Addr:     fmt.Sprintf("%s:%d", instance.Host, instance.Port),
-		Password: password,
+		Addr:     fmt.Sprintf("%s:%s", cfg.Host, cfg.Port),
+		Password: cfg.Auth,
 		TLSConfig: &tls.Config{
 			RootCAs: caCertPool,
 		},
@@ -66,30 +87,27 @@ func redisConfig(instance *redispb.Instance, password string) *redis.Options {
 
 func main() {
 	arg.MustParse(&args)
-	if args.Project == "" || args.Instance == "" || args.Loacation == "" {
-		fmt.Println("Must specify --project, --location and --instance")
+	if args.Project == "" || args.Instance == "" { 
+		fmt.Println("Must specify --project and --instance")
 		return
 	}
-	password, err := getSecret(args.Project, args.Instance)
+	cfg, err := getSecret(args.Project, args.Instance)
 	if err != nil {
 		log.Fatalf("Failed to get secret: %v", err)
 	}
-	instance, err := getInstance(args.Project, args.Loacation, args.Instance)
-	if err != nil {
-		log.Fatalf("Failed to get instance: %v", err)
-	}
-  conf := redisConfig(instance, password)
 
-  ctx := context.Background()
-  rdb := redis.NewClient(conf)
-  defer rdb.Close()
-  err = rdb.Set(ctx, "key", "value", 0).Err()
-  if err != nil {
-    log.Fatalf("Failed to set key: %v", err)
-  }
-  val, err := rdb.Get(ctx, "key").Result()
-  if err != nil {
-    log.Fatalf("Failed to get key: %v", err)
-  }
-  fmt.Printf("Got value: %s\n", val)
+  conf := redisConfig(cfg)
+
+	ctx := context.Background()
+	rdb := redis.NewClient(conf)
+	defer rdb.Close()
+	err = rdb.Set(ctx, "key", "value", 0).Err()
+	if err != nil {
+		log.Fatalf("Failed to set key: %v", err)
+	}
+	val, err := rdb.Get(ctx, "key").Result()
+	if err != nil {
+		log.Fatalf("Failed to get key: %v", err)
+	}
+	fmt.Printf("Got value: %s\n", val)
 }
