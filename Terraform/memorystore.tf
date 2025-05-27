@@ -1,9 +1,20 @@
-resource "google_redis_instance" "cache" {
-  project                 = var.gcp_project_id
-  region                  = var.gcp_region
-  name                    = "memorystore-${random_id.suffix.hex}"
-  memory_size_gb          = 1
-  auth_enabled            = true
-  transit_encryption_mode = "SERVER_AUTHENTICATION"
-  authorized_network      = google_compute_network.vpc.name
+resource "google_memorystore_instance" "valkey_cluster" {
+  project        = var.project_id
+  instance_id    = var.instance_id
+  shard_count    = var.shard_count
+  engine_version = var.engine_version
+  mode           = var.mode
+
+  desired_psc_auto_connections {
+    network    = "projects/${coalesce(var.network_project, var.project_id)}/global/networks/${var.network}"
+    project_id = var.project_id
+  }
+
+  location                = var.location
+  replica_count           = var.replica_count
+  node_type               = var.node_type
+  transit_encryption_mode = var.transit_encryption_mode
+  authorization_mode      = var.authorization_mode
+  engine_configs          = var.engine_configs
+
 }

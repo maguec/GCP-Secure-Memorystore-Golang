@@ -2,16 +2,16 @@ package main
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"fmt"
 	"log"
 	"time"
-	"crypto/tls"
-	"crypto/x509"
 
 	secretmanager "cloud.google.com/go/secretmanager/apiv1"
 	"cloud.google.com/go/secretmanager/apiv1/secretmanagerpb"
 	"github.com/alexflint/go-arg"
-	"github.com/go-redis/redis/v9"
+	"github.com/valkey-io/valkey-go"
 )
 
 type Rconf struct {
@@ -22,78 +22,72 @@ type Rconf struct {
 }
 
 var args struct {
-	Project   string `help:"GCP ProjectID" default:"" arg:"--project, -p, env:GCP_PROJECT"`
-	Instance  string `help:"Memorystore Instance name" default:"" arg:"--instance, -i, env:MEMORYSTORE_INSTANCE"`
+	Project  string `help:"GCP ProjectID" default:"" arg:"--project, -p, env:GCP_PROJECT"`
+	Instance string `help:"Memorystore Instance name" default:"" arg:"--instance, -i, env:MEMORYSTORE_INSTANCE"`
 }
 
 func getSecret(projectID string, secretID string) (Rconf, error) {
 	ctx := context.Background()
 	client, err := secretmanager.NewClient(ctx)
-  cfg := Rconf{}
+	cfg := Rconf{}
 	if err != nil {
 		return cfg, err
 	}
 
-  // Fetch AUTH
+	// Fetch AUTH
 	secret, err := client.AccessSecretVersion(ctx, &secretmanagerpb.AccessSecretVersionRequest{
 		Name: fmt.Sprintf("projects/%s/secrets/%s-auth/versions/latest", projectID, secretID),
 	})
 	if err != nil {
 		return cfg, err
 	}
-  cfg.Auth = string(secret.Payload.Data)
+	cfg.Auth = string(secret.Payload.Data)
 
-  // Fetch CERT
-  secret, err = client.AccessSecretVersion(ctx, &secretmanagerpb.AccessSecretVersionRequest{
-    Name: fmt.Sprintf("projects/%s/secrets/%s-cert/versions/latest", projectID, secretID),
-  })
-  if err != nil {
-    return cfg, err
-  }
-  cfg.Cert = string(secret.Payload.Data)
+	// Fetch CERT
+	secret, err = client.AccessSecretVersion(ctx, &secretmanagerpb.AccessSecretVersionRequest{
+		Name: fmt.Sprintf("projects/%s/secrets/%s-cert/versions/latest", projectID, secretID),
+	})
+	if err != nil {
+		return cfg, err
+	}
+	cfg.Cert = string(secret.Payload.Data)
 
-  // Fetch HOST
-  secret, err = client.AccessSecretVersion(ctx, &secretmanagerpb.AccessSecretVersionRequest{
-    Name: fmt.Sprintf("projects/%s/secrets/%s-ip/versions/latest", projectID, secretID),
-  })
-  if err != nil {
-    return cfg, err
-  }
-  cfg.Host = string(secret.Payload.Data)
+	// Fetch HOST
+	secret, err = client.AccessSecretVersion(ctx, &secretmanagerpb.AccessSecretVersionRequest{
+		Name: fmt.Sprintf("projects/%s/secrets/%s-ip/versions/latest", projectID, secretID),
+	})
+	if err != nil {
+		return cfg, err
+	}
+	cfg.Host = string(secret.Payload.Data)
 
-  // Fetch PORT
-  secret, err = client.AccessSecretVersion(ctx, &secretmanagerpb.AccessSecretVersionRequest{
-    Name: fmt.Sprintf("projects/%s/secrets/%s-port/versions/latest", projectID, secretID),
-  })
-  if err != nil {
-    return cfg, err
-  }
-  cfg.Port = string(secret.Payload.Data)
+	// Fetch PORT
+	secret, err = client.AccessSecretVersion(ctx, &secretmanagerpb.AccessSecretVersionRequest{
+		Name: fmt.Sprintf("projects/%s/secrets/%s-port/versions/latest", projectID, secretID),
+	})
+	if err != nil {
+		return cfg, err
+	}
+	cfg.Port = string(secret.Payload.Data)
 
 	return cfg, nil
 }
 
-func redisConfig(cfg Rconf) *redis.Options {
+func valkeyConfig(cfg Rconf) *valkey.Options {
 	caCertPool := x509.NewCertPool()
 	caCertPool.AppendCertsFromPEM([]byte(cfg.Cert))
-	return &redis.Options{
-		Addr:     fmt.Sprintf("%s:%s", cfg.Host, cfg.Port),
+	return &valkey.ClientOption{
+		InitAddr:  []string{(fmt.Sprintf("%s:%s", cfg.Host, cfg.Port),fmt.Sprintf("%s:%s", cfg.Host, cfg.Port))
 		Password: cfg.Auth,
 		TLSConfig: &tls.Config{
 			RootCAs: caCertPool,
 		},
-    // Connection Pooling Options
-    // ALWAYS use connection pooling
-    MinIdleConns: 1,      // Ensure that there is always at least 1 conn = set to number of workers in prod
-    MaxIdleConns: 1,      // Don't have too many connections open set o to number of workers in prod + alph
-    ConnMaxLifetime: 0,   // Stay open
-    ConnMaxIdleTime: time.Minute, // Close connections after 1 minute of inactivity - change in prod
 	}
 }
 
 func main() {
 	arg.MustParse(&args)
-	if args.Project == "" || args.Instance == "" { 
+	if args.Project == "" || args.Instance == "" {
 		fmt.Println("Must specify --project and --instance")
 		return
 	}
@@ -102,10 +96,10 @@ func main() {
 		log.Fatalf("Failed to get secret: %v", err)
 	}
 
-  conf := redisConfig(cfg)
+	conf := valkeyConfig(cfg)
 
 	ctx := context.Background()
-	rdb := redis.NewClient(conf)
+	rdb := valkey.NewClient(conf)
 	defer rdb.Close()
 	err = rdb.Set(ctx, "key", "value", 0).Err()
 	if err != nil {
