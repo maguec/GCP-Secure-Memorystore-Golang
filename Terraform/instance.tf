@@ -5,17 +5,17 @@ resource "google_compute_instance" "vm" {
   zone         = "${var.gcp_region}-a"
   tags         = ["ssh-access-${random_id.suffix.hex}"]
 
-  metadata_startup_script = templatefile(
-    "startup_script.sh",
-    {
-      projectid : var.gcp_project_id,
-      region : var.gcp_region
-      memorystore : google_redis_instance.cache.name
-      memorystore_ip : google_redis_instance.cache.host
-      memorystore_port : google_redis_instance.cache.port
-      memorystore_cert : google_redis_instance.cache.server_ca_certs[0].cert
-    },
-  )
+  #  metadata_startup_script = templatefile(
+  #    "startup_script.sh",
+  #    {
+  #      projectid : var.gcp_project_id,
+  #      region : var.gcp_region
+  #      memorystore : google_memorystore_instance.cache.name
+  #      memorystore_ip : google_memorystore_instance.cache.host
+  #      memorystore_port : google_memorystore_instance.cache.port
+  #      memorystore_cert : google_memorystore_instance.cache.server_ca_certs[0].cert
+  #    },
+  #  )
 
 
   boot_disk {
@@ -25,7 +25,9 @@ resource "google_compute_instance" "vm" {
   }
 
   network_interface {
-    network = google_compute_network.vpc.name
+    network            = google_compute_network.vpc.name
+    subnetwork         = google_compute_subnetwork.valkey-subnet.name
+    subnetwork_project = var.gcp_project_id
     access_config {
       # This will auto generated an external IP
     }
@@ -36,7 +38,7 @@ resource "google_compute_instance" "vm" {
   }
 
   service_account {
-    email = google_service_account.service_account.email
+    email  = google_service_account.service_account.email
     scopes = ["cloud-platform"]
   }
 
@@ -45,4 +47,3 @@ resource "google_compute_instance" "vm" {
     ignore_changes = [boot_disk]
   }
 }
-

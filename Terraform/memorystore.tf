@@ -1,20 +1,38 @@
-resource "google_memorystore_instance" "valkey_cluster" {
-  project        = var.project_id
-  instance_id    = var.instance_id
-  shard_count    = var.shard_count
-  engine_version = var.engine_version
-  mode           = var.mode
+resource "google_memorystore_instance" "cache" {
+  project        = var.gcp_project_id
+  location       = var.gcp_region
+  instance_id    = "valkey-${random_id.suffix.hex}"
+  shard_count    = 3
+  engine_version = "VALKEY_8_0"
+  mode           = "CLUSTER"
 
   desired_psc_auto_connections {
-    network    = "projects/${coalesce(var.network_project, var.project_id)}/global/networks/${var.network}"
-    project_id = var.project_id
+    network    = "projects/${var.gcp_project_id}/global/networks/${google_compute_network.vpc.name}"
+    project_id = var.gcp_project_id
   }
 
-  location                = var.location
-  replica_count           = var.replica_count
-  node_type               = var.node_type
-  transit_encryption_mode = var.transit_encryption_mode
-  authorization_mode      = var.authorization_mode
-  engine_configs          = var.engine_configs
+  replica_count           = 0
+  node_type               = "STANDARD_SMALL"
+  transit_encryption_mode = "SERVER_AUTHENTICATION"
+  authorization_mode      = "IAM_AUTH"
 
+  depends_on = [
+    google_network_connectivity_service_connection_policy.service_connection_policies,
+  ]
+
+}
+
+resource "google_network_connectivity_service_connection_policy" "service_connection_policies" {
+  project       = var.gcp_project_id
+  location      = var.gcp_region
+  name          = "psc-valkey-${random_id.suffix.hex}"
+  service_class = "gcp-memorystore"
+  description   = "PSC for Valkey ${random_id.suffix.hex}"
+  network       = "projects/${var.gcp_project_id}/global/networks/${google_compute_network.vpc.name}"
+
+  psc_config {
+    subnetworks = [
+      "projects/${var.gcp_project_id}/regions/${var.gcp_region}/subnetworks/${google_compute_subnetwork.valkey-subnet.name}"
+    ]
+  }
 }
