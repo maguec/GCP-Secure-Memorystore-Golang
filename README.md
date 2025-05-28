@@ -1,6 +1,6 @@
 # GCP-Secure-Memorystore-Golang
 
-Example for connecting to GCP Memorystore using Golang.
+Example for connecting to GCP Memorystore using Golang using IAM authenticaion and TLS certificates
 
 The terraform stores the following settings in [Secret Manager](https://cloud.google.com/secret-manager/docs)
 
@@ -9,7 +9,6 @@ The terraform stores the following settings in [Secret Manager](https://cloud.go
 | IP Address |
 | Port |
 | TLS Certificate |
-| Auth String |
 
 The previous version of this called the backend API to obtain the server information.
 
@@ -65,14 +64,14 @@ and run the following on the VM
 
 ```bash
 source /etc/bash.bashrc
-valkey-cli --tls --cacert /tmp/ca.crt -h $MEMORYSTORE_IP -p $MEMORYSTORE_PORT -a $TOKEN
+valkey-cli -c --tls --cacert /tmp/ca.crt -h $MEMORYSTORE_IP -p $MEMORYSTORE_PORT -a $TOKEN
 ```
 
 Then the GET KEY command  should work
 
 ```bash
 XX.XX.XX.XX:XXXX> get key
-"value"
+"val"
 ```
 
 
