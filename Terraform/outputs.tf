@@ -36,6 +36,10 @@ output "vm_secret_port" {
 
 #You'll need to download the cert first
 
+output "z_download_ca_cert" {
+  value = "https://console.cloud.google.com/memorystore/valkey/locations/${var.gcp_region}/instances/valkey-${random_id.suffix.hex}/details/overview"
+}
+
 output "z_upload_ca_cert" {
   value = "gcloud secrets versions add memorystore-${random_id.suffix.hex}-cert --data-file=~/Downloads/server-ca.pem"
 }
