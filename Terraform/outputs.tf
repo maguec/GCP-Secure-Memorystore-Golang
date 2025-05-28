@@ -15,7 +15,7 @@ output "vm_ssh_command" {
 }
 
 output "run_test_command" {
-  value = "/usr/lib/go-1.22/bin/go run secure-pool-example.go --project ${var.gcp_project_id} --instance memorystore-${random_id.suffix.hex}"
+  value = "/usr/lib/go-1.22/bin/go run secure-pool-example.go --project ${var.gcp_project_id} --instance valkey-${random_id.suffix.hex}"
 }
 
 #output "vm_secret_auth" {
@@ -23,15 +23,15 @@ output "run_test_command" {
 #}
 
 output "vm_secret_ip" {
-  value = "gcloud secrets versions access latest --secret=memorystore-${random_id.suffix.hex}-ip"
+  value = "gcloud secrets versions access latest --secret=valkey-${random_id.suffix.hex}-ip"
 }
 
 output "vm_secret_cert" {
-  value = "gcloud secrets versions access latest --secret=memorystore-${random_id.suffix.hex}-cert"
+  value = "gcloud secrets versions access latest --secret=valkey-${random_id.suffix.hex}-cert"
 }
 
 output "vm_secret_port" {
-  value = "gcloud secrets versions access latest --secret=memorystore-${random_id.suffix.hex}-port"
+  value = "gcloud secrets versions access latest --secret=valkey-${random_id.suffix.hex}-port"
 }
 
 #You'll need to download the cert first
@@ -41,7 +41,5 @@ output "z_download_ca_cert" {
 }
 
 output "z_upload_ca_cert" {
-  value = "gcloud secrets versions add memorystore-${random_id.suffix.hex}-cert --data-file=~/Downloads/server-ca.pem"
+  value = "gcloud secrets versions add valkey-${random_id.suffix.hex}-cert --data-file=~/Downloads/server-ca.pem"
 }
-
-

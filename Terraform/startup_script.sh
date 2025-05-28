@@ -1,5 +1,5 @@
 apt-get update
-apt-get install -y golang-1.22 redis-tools
+apt-get install -y golang-1.22 valkey-tools
 
 
 echo "# Set up environment variables" >> /etc/bash.bashrc

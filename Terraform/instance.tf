@@ -13,7 +13,7 @@ resource "google_compute_instance" "vm" {
         memorystore : google_memorystore_instance.cache.instance_id
         memorystore_ip : google_memorystore_instance.cache.discovery_endpoints[0].address
         memorystore_port : google_memorystore_instance.cache.discovery_endpoints[0].port
-        memorystore_cert : "memorystore-${random_id.suffix.hex}-cert"
+        memorystore_cert : "valkey-${random_id.suffix.hex}-cert"
       },
     )
 

@@ -47,7 +47,9 @@ gcloud compute ssh --zone <ZONE> vm-<STRING> --project <PROJECT_ID>
 source /etc/bash.bashrc
 git clone https://github.com/maguec/GCP-Secure-Memorystore-Golang
 cd GCP-Secure-Memorystore-Golang/
-go run secure-pool-example.go
+git checkout valkey
+export TOKEN=$(gcloud auth print-access-token)
+go run secure-pool-example.go --project <PROJECT> --instance ${MEMORYSTORE_INSTANCE}
 ```
 
 To confirm the actual value is getting set correctly
@@ -63,8 +65,7 @@ and run the following on the VM
 
 ```bash
 source /etc/bash.bashrc
-export MEMORYSTORE_PASS=`gcloud secrets versions access latest --secret=memorystore-<STRING>-auth`
-redis-cli --tls --cacert /tmp/ca.crt -h $MEMORYSTORE_IP -p $MEMORYSTORE_PORT -a $MEMORYSTORE_PASS
+valkey-cli --tls --cacert /tmp/ca.crt -h $MEMORYSTORE_IP -p $MEMORYSTORE_PORT -a $TOKEN
 ```
 
 Then the GET KEY command  should work
