@@ -1,10 +1,11 @@
 resource "google_memorystore_instance" "cache" {
-  project        = var.gcp_project_id
-  location       = var.gcp_region
-  instance_id    = "valkey-${random_id.suffix.hex}"
-  shard_count    = 3
-  engine_version = "VALKEY_8_0"
-  mode           = "CLUSTER"
+  project                     = var.gcp_project_id
+  location                    = var.gcp_region
+  instance_id                 = "valkey-${random_id.suffix.hex}"
+  shard_count                 = 3
+  engine_version              = "VALKEY_8_0"
+  deletion_protection_enabled = false
+  mode                        = "CLUSTER"
 
   desired_psc_auto_connections {
     network    = "projects/${var.gcp_project_id}/global/networks/${google_compute_network.vpc.name}"
