@@ -6,7 +6,7 @@ import (
 	"crypto/x509"
 	"fmt"
 	"log"
-	"time"
+	"os"
 
 	secretmanager "cloud.google.com/go/secretmanager/apiv1"
 	"cloud.google.com/go/secretmanager/apiv1/secretmanagerpb"
@@ -18,12 +18,17 @@ type Rconf struct {
 	Host string
 	Port string
 	Cert string
-	Auth string
 }
 
 var args struct {
 	Project  string `help:"GCP ProjectID" default:"" arg:"--project, -p, env:GCP_PROJECT"`
 	Instance string `help:"Memorystore Instance name" default:"" arg:"--instance, -i, env:MEMORYSTORE_INSTANCE"`
+}
+
+func retrieveTokenFunc(yo valkey.AuthCredentialsContext) (valkey.AuthCredentials, error) {
+	username := "default"
+	password := os.Getenv("TOKEN")
+	return valkey.AuthCredentials{Username: username, Password: password}, nil
 }
 
 func getSecret(projectID string, secretID string) (Rconf, error) {
@@ -34,17 +39,8 @@ func getSecret(projectID string, secretID string) (Rconf, error) {
 		return cfg, err
 	}
 
-	// Fetch AUTH
-	secret, err := client.AccessSecretVersion(ctx, &secretmanagerpb.AccessSecretVersionRequest{
-		Name: fmt.Sprintf("projects/%s/secrets/%s-auth/versions/latest", projectID, secretID),
-	})
-	if err != nil {
-		return cfg, err
-	}
-	cfg.Auth = string(secret.Payload.Data)
-
 	// Fetch CERT
-	secret, err = client.AccessSecretVersion(ctx, &secretmanagerpb.AccessSecretVersionRequest{
+	secret, err := client.AccessSecretVersion(ctx, &secretmanagerpb.AccessSecretVersionRequest{
 		Name: fmt.Sprintf("projects/%s/secrets/%s-cert/versions/latest", projectID, secretID),
 	})
 	if err != nil {
@@ -73,12 +69,13 @@ func getSecret(projectID string, secretID string) (Rconf, error) {
 	return cfg, nil
 }
 
-func valkeyConfig(cfg Rconf) *valkey.Options {
+func valkeyConfig(cfg Rconf) valkey.ClientOption {
 	caCertPool := x509.NewCertPool()
 	caCertPool.AppendCertsFromPEM([]byte(cfg.Cert))
-	return &valkey.ClientOption{
-		InitAddr:  []string{(fmt.Sprintf("%s:%s", cfg.Host, cfg.Port),fmt.Sprintf("%s:%s", cfg.Host, cfg.Port))
-		Password: cfg.Auth,
+	addr := fmt.Sprintf("%s:%s", cfg.Host, cfg.Port)
+	return valkey.ClientOption{
+		InitAddress:       []string{addr, addr},
+		AuthCredentialsFn: retrieveTokenFunc,
 		TLSConfig: &tls.Config{
 			RootCAs: caCertPool,
 		},
@@ -99,13 +96,16 @@ func main() {
 	conf := valkeyConfig(cfg)
 
 	ctx := context.Background()
-	rdb := valkey.NewClient(conf)
+	rdb, err := valkey.NewClient(conf)
+	if err != nil {
+		log.Fatalf("configuration failed: %v", err)
+	}
 	defer rdb.Close()
-	err = rdb.Set(ctx, "key", "value", 0).Err()
+	err = rdb.Do(ctx, rdb.B().Set().Key("key").Value("val").Build()).Error()
 	if err != nil {
 		log.Fatalf("Failed to set key: %v", err)
 	}
-	val, err := rdb.Get(ctx, "key").Result()
+	val, err := rdb.Do(ctx, rdb.B().Get().Key("key").Build()).ToString()
 	if err != nil {
 		log.Fatalf("Failed to get key: %v", err)
 	}
