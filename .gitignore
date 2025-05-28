@@ -3,3 +3,4 @@ Terraform/terraform.tfstate
 Terraform/terraform.tfstate.backup
 Terraform/.terraform
 Terraform/.terraform.lock.hcl
+.terraform.tfstate.lock.info
