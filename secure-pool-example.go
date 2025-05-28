@@ -26,6 +26,13 @@ var args struct {
 }
 
 func retrieveTokenFunc(yo valkey.AuthCredentialsContext) (valkey.AuthCredentials, error) {
+	/* 
+			This is currently just a place holder
+		 	Run the following on the command line on the VM to set the TOKEN envvar
+     	export TOKEN=$(gcloud auth print-access-token)
+     	TODO: rewrite this function along the lines of
+		 	https://cloud.google.com/memorystore/docs/cluster/client-library-connection#iam_auth_and_in_transit_encryption
+	*/
 	username := "default"
 	password := os.Getenv("TOKEN")
 	return valkey.AuthCredentials{Username: username, Password: password}, nil
@@ -41,7 +48,7 @@ func getSecret(projectID string, secretID string) (Rconf, error) {
 
 	// Fetch CERT
 	secret, err := client.AccessSecretVersion(ctx, &secretmanagerpb.AccessSecretVersionRequest{
-		Name: fmt.Sprintf("projects/%s/secrets/memorystore-%s-cert/versions/latest", projectID, secretID),
+		Name: fmt.Sprintf("projects/%s/secrets/%s-cert/versions/latest", projectID, secretID),
 	})
 	if err != nil {
 		return cfg, err
@@ -50,7 +57,7 @@ func getSecret(projectID string, secretID string) (Rconf, error) {
 
 	// Fetch HOST
 	secret, err = client.AccessSecretVersion(ctx, &secretmanagerpb.AccessSecretVersionRequest{
-		Name: fmt.Sprintf("projects/%s/secrets/memorystore-%s-ip/versions/latest", projectID, secretID),
+		Name: fmt.Sprintf("projects/%s/secrets/%s-ip/versions/latest", projectID, secretID),
 	})
 	if err != nil {
 		return cfg, err
@@ -59,7 +66,7 @@ func getSecret(projectID string, secretID string) (Rconf, error) {
 
 	// Fetch PORT
 	secret, err = client.AccessSecretVersion(ctx, &secretmanagerpb.AccessSecretVersionRequest{
-		Name: fmt.Sprintf("projects/%s/secrets/memorystore-%s-port/versions/latest", projectID, secretID),
+		Name: fmt.Sprintf("projects/%s/secrets/%s-port/versions/latest", projectID, secretID),
 	})
 	if err != nil {
 		return cfg, err
