@@ -41,7 +41,7 @@ func getSecret(projectID string, secretID string) (Rconf, error) {
 
 	// Fetch CERT
 	secret, err := client.AccessSecretVersion(ctx, &secretmanagerpb.AccessSecretVersionRequest{
-		Name: fmt.Sprintf("projects/%s/secrets/%s-cert/versions/latest", projectID, secretID),
+		Name: fmt.Sprintf("projects/%s/secrets/memorystore-%s-cert/versions/latest", projectID, secretID),
 	})
 	if err != nil {
 		return cfg, err
@@ -50,7 +50,7 @@ func getSecret(projectID string, secretID string) (Rconf, error) {
 
 	// Fetch HOST
 	secret, err = client.AccessSecretVersion(ctx, &secretmanagerpb.AccessSecretVersionRequest{
-		Name: fmt.Sprintf("projects/%s/secrets/%s-ip/versions/latest", projectID, secretID),
+		Name: fmt.Sprintf("projects/%s/secrets/memorystore-%s-ip/versions/latest", projectID, secretID),
 	})
 	if err != nil {
 		return cfg, err
@@ -59,7 +59,7 @@ func getSecret(projectID string, secretID string) (Rconf, error) {
 
 	// Fetch PORT
 	secret, err = client.AccessSecretVersion(ctx, &secretmanagerpb.AccessSecretVersionRequest{
-		Name: fmt.Sprintf("projects/%s/secrets/%s-port/versions/latest", projectID, secretID),
+		Name: fmt.Sprintf("projects/%s/secrets/memorystore-%s-port/versions/latest", projectID, secretID),
 	})
 	if err != nil {
 		return cfg, err
