@@ -22,7 +22,7 @@ resource "google_project_iam_binding" "secret_accessor" {
 
 resource "google_project_iam_binding" "memorystore" {
   project = var.gcp_project_id
-  role    = "roles/redis.dbConnectionUser"
+  role    = "roles/memorystore.dbConnectionUser"
   members = [
     "serviceAccount:${google_service_account.service_account.email}"
   ]

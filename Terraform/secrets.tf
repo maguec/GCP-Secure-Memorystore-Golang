@@ -51,5 +51,5 @@ resource "google_secret_manager_secret" "secret-port" {
 
 resource "google_secret_manager_secret_version" "secret-version-basic-port" {
   secret      = google_secret_manager_secret.secret-port.id
-  secret_data = google_memorystore_instance.cache.discovery_endpoints[0].address
+  secret_data = google_memorystore_instance.cache.discovery_endpoints[0].port
 }

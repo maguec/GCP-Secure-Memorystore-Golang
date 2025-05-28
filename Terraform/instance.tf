@@ -5,22 +5,22 @@ resource "google_compute_instance" "vm" {
   zone         = "${var.gcp_region}-a"
   tags         = ["ssh-access-${random_id.suffix.hex}"]
 
-  #  metadata_startup_script = templatefile(
-  #    "startup_script.sh",
-  #    {
-  #      projectid : var.gcp_project_id,
-  #      region : var.gcp_region
-  #      memorystore : google_memorystore_instance.cache.name
-  #      memorystore_ip : google_memorystore_instance.cache.host
-  #      memorystore_port : google_memorystore_instance.cache.port
-  #      memorystore_cert : google_memorystore_instance.cache.server_ca_certs[0].cert
-  #    },
-  #  )
+    metadata_startup_script = templatefile(
+      "startup_script.sh",
+      {
+        projectid : var.gcp_project_id,
+        region : var.gcp_region
+        memorystore : google_memorystore_instance.cache.instance_id
+        memorystore_ip : google_memorystore_instance.cache.discovery_endpoints[0].address
+        memorystore_port : google_memorystore_instance.cache.discovery_endpoints[0].port
+        memorystore_cert : "memorystore-${random_id.suffix.hex}-cert"
+      },
+    )
 
 
   boot_disk {
     initialize_params {
-      image = "ubuntu-os-cloud/ubuntu-2204-lts"
+      image = "ubuntu-os-cloud/ubuntu-2404-lts-amd64"
     }
   }
 

@@ -10,4 +10,4 @@ echo "export MEMORYSTORE_IP=${memorystore_ip}" >> /etc/bash.bashrc
 echo "export MEMORYSTORE_PORT=${memorystore_port}" >> /etc/bash.bashrc
 echo "export PATH=$PATH:/usr/lib/go-1.22/bin" >> /etc/bash.bashrc
 
-echo "${memorystore_cert}" > /tmp/ca.crt
+/snap/bin/gcloud secrets versions access latest --secret=${memorystore_cert}  > /tmp/ca.crt
