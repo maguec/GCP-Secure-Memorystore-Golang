@@ -6,6 +6,7 @@ import (
 	"crypto/x509"
 	"fmt"
 	"log"
+	"math/rand"
 	"os"
 
 	secretmanager "cloud.google.com/go/secretmanager/apiv1"
@@ -26,12 +27,12 @@ var args struct {
 }
 
 func retrieveTokenFunc(yo valkey.AuthCredentialsContext) (valkey.AuthCredentials, error) {
-	/* 
-			This is currently just a place holder
-		 	Run the following on the command line on the VM to set the TOKEN envvar
-     	export TOKEN=$(gcloud auth print-access-token)
-     	TODO: rewrite this function along the lines of
-		 	https://cloud.google.com/memorystore/docs/cluster/client-library-connection#iam_auth_and_in_transit_encryption
+	/*
+				This is currently just a place holder
+			 	Run the following on the command line on the VM to set the TOKEN envvar
+	     	export TOKEN=$(gcloud auth print-access-token)
+	     	TODO: rewrite this function along the lines of
+			 	https://cloud.google.com/memorystore/docs/cluster/client-library-connection#iam_auth_and_in_transit_encryption
 	*/
 	username := "default"
 	password := os.Getenv("TOKEN")
@@ -85,6 +86,9 @@ func valkeyConfig(cfg Rconf) valkey.ClientOption {
 		AuthCredentialsFn: retrieveTokenFunc,
 		TLSConfig: &tls.Config{
 			RootCAs: caCertPool,
+		},
+		SendToReplicas: func(cmd valkey.Completed) bool {
+			return (cmd.IsReadOnly() && rand.Intn(2) == 0)
 		},
 	}
 }
