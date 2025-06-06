@@ -12,7 +12,7 @@ resource "google_memorystore_instance" "cache" {
     project_id = var.gcp_project_id
   }
 
-  replica_count           = 0
+  replica_count           = 1
   node_type               = "STANDARD_SMALL"
   transit_encryption_mode = "SERVER_AUTHENTICATION"
   authorization_mode      = "IAM_AUTH"
