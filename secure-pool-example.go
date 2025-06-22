@@ -68,13 +68,19 @@ func getSecret(projectID string, secretID string) (Rconf, error) {
 		return cfg, err
 	}
 	cfg.Port = string(secret.Payload.Data)
-
 	return cfg, nil
 }
 
 func valkeyDialLogger(ctx context.Context, s1 string, dialer *net.Dialer, tlsconfig *tls.Config) (net.Conn, error) {
+	var conn net.Conn
+	var err error
 	now := time.Now()
-	conn, err := net.Dial("tcp", s1)
+	if tlsconfig != nil {
+		tlsDialer := tls.Dialer{NetDialer: dialer, Config: tlsconfig}
+		conn, err =tlsDialer.DialContext(ctx, "tcp", s1)
+	} else {
+		conn, err = net.Dial("tcp", s1)
+	}
 	log.Printf("Dialing %s took %v", s1, time.Since(now))
 	return conn, err
 }
@@ -101,7 +107,8 @@ func worker(conf Rconf, i int) {
 	valkeyConf := valkeyConfig(conf)
 	rdb, err := valkey.NewClient(valkeyConf)
 	if err != nil {
-		log.Fatalf("configuration failed: %v", err)
+		log.Printf("Worker %d: configuration failed: %v", i, err)
+		for {}
 	}
 	defer rdb.Close()
 	for {
@@ -124,9 +131,17 @@ func main() {
 		log.Fatalf("Failed to get secret: %v", err)
 	}
 
+	valkeyConf := valkeyConfig(cfg)
+	testconn, err := valkey.NewClient(valkeyConf)
+	if err != nil {
+		log.Fatal("Initial connection failed: %v", err)
+	}
+	testconn.Close()
+
+
 	wg := sync.WaitGroup{}
 	wg.Add(1)
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 100; i++ {
 		go func() {
 			worker(cfg, i)
 			wg.Done()
