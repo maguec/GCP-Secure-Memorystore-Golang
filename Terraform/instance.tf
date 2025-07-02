@@ -1,21 +1,22 @@
 resource "google_compute_instance" "vm" {
-  project      = var.gcp_project_id
-  name         = "vm-${random_id.suffix.hex}"
-  machine_type = "n1-standard-2"
-  zone         = "${var.gcp_region}-a"
-  tags         = ["ssh-access-${random_id.suffix.hex}"]
+  project                   = var.gcp_project_id
+  name                      = "vm-${random_id.suffix.hex}"
+  machine_type              = "n1-standard-4"
+  zone                      = "${var.gcp_region}-a"
+  tags                      = ["ssh-access-${random_id.suffix.hex}"]
+  allow_stopping_for_update = true
 
-    metadata_startup_script = templatefile(
-      "startup_script.sh",
-      {
-        projectid : var.gcp_project_id,
-        region : var.gcp_region
-        memorystore : google_memorystore_instance.cache.instance_id
-        memorystore_ip : google_memorystore_instance.cache.discovery_endpoints[0].address
-        memorystore_port : google_memorystore_instance.cache.discovery_endpoints[0].port
-        memorystore_cert : "valkey-${random_id.suffix.hex}-cert"
-      },
-    )
+  metadata_startup_script = templatefile(
+    "startup_script.sh",
+    {
+      projectid : var.gcp_project_id,
+      region : var.gcp_region
+      memorystore : google_memorystore_instance.cache.instance_id
+      memorystore_ip : google_memorystore_instance.cache.discovery_endpoints[0].address
+      memorystore_port : google_memorystore_instance.cache.discovery_endpoints[0].port
+      memorystore_cert : "valkey-${random_id.suffix.hex}-cert"
+    },
+  )
 
 
   boot_disk {
